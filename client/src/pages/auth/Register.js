@@ -31,8 +31,9 @@ const Register = () => {
         className="form-control"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="enter an email address"
+        placeholder="enter your email address"
       />
+      <br />
       <button type="submit" className="btn btn-raised mt-4">
         Verify
       </button>
