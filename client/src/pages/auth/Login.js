@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { auth, googleAuthProvider } from '../../firebase';
 import { toast } from 'react-toastify';
 import { Button, Spin } from 'antd';
@@ -7,7 +8,19 @@ import { useDispatch, useSelector } from 'react-redux';
 import { userType } from '../../reducers/userType';
 import { Link } from 'react-router-dom';
 
-const RegisterComplete = ({ history }) => {
+const createOrUpdateUser = async (authtoken) => {
+  return await axios.post(
+    `${process.env.REACT_APP_API}/update/user`,
+    {},
+    {
+      headers: {
+        authtoken,
+      },
+    }
+  );
+};
+
+const LogIn = ({ history }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,13 +44,21 @@ const RegisterComplete = ({ history }) => {
       const { user } = result;
       const idTokenResult = await user.getIdTokenResult();
 
-      dispatch({
-        type: userType.LOGGED_IN_USER,
-        payload: {
-          email: user.email,
-          token: idTokenResult.token,
-        },
-      });
+      createOrUpdateUser(idTokenResult.token)
+        .then((res) =>
+          dispatch({
+            type: userType.LOGGED_IN_USER,
+            payload: {
+              name: res.data.name,
+              email: res.data.email,
+              token: idTokenResult.token,
+              role: res.data.role,
+              _id: res.data._id,
+            },
+          })
+        )
+        .catch((err) => console.log(err.message));
+
       setLoading(false);
       history.push('/');
     } catch (error) {
@@ -53,13 +74,20 @@ const RegisterComplete = ({ history }) => {
       .then(async (result) => {
         const { user } = result;
         const idTokenResult = await user.getIdTokenResult();
-        dispatch({
-          type: userType.LOGGED_IN_USER,
-          payload: {
-            email: user.email,
-            token: idTokenResult.token,
-          },
-        });
+        createOrUpdateUser(idTokenResult.token)
+          .then((res) =>
+            dispatch({
+              type: userType.LOGGED_IN_USER,
+              payload: {
+                name: res.data.name,
+                email: res.data.email,
+                token: idTokenResult.token,
+                role: res.data.role,
+                _id: res.data._id,
+              },
+            })
+          )
+          .catch((err) => console.log(err.message));
       })
       .catch((err) => {
         console.log(err);
@@ -67,14 +95,14 @@ const RegisterComplete = ({ history }) => {
       });
   };
 
-  const completeRegisterationForm = () => (
+  const loginForm = () => (
     <form>
       <input
         type="email"
         className="form-control"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="enter your email"
+        placeholder="email"
       />
       <br />
       <input
@@ -82,7 +110,7 @@ const RegisterComplete = ({ history }) => {
         className="form-control"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="enter your password"
+        placeholder="assword"
       />
       <br />
       <Button
@@ -106,7 +134,7 @@ const RegisterComplete = ({ history }) => {
         <div className="col-md-6 offset-md-3">
           {!loading ? <h4>Log in</h4> : <Spin />}
 
-          {completeRegisterationForm()}
+          {loginForm()}
           <Button
             onClick={googleLogin}
             type="danger"
@@ -126,4 +154,4 @@ const RegisterComplete = ({ history }) => {
   );
 };
 
-export default RegisterComplete;
+export default LogIn;
